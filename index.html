@@ -356,6 +356,21 @@
     .table-wrap{display:block!important}
   }
 
+
+  .waste.good-residue{
+    background:repeating-linear-gradient(135deg,#f3f4f6 0,#f3f4f6 6px,#e5e7eb 6px,#e5e7eb 12px);
+    color:#374151;
+  }
+  .quality-note{
+    margin-top:8px;
+    font-size:13px;
+    color:#374151;
+    background:#f9fafb;
+    border:1px solid #e5e7eb;
+    border-radius:12px;
+    padding:10px;
+  }
+
 </style>
 </head>
 <body>
@@ -407,6 +422,7 @@
       </div>
     </div>
     <div class="roll" id="layout"></div>
+    <div class="quality-note">Алгоритм подбирает раскладку по четырем критериям: минимальная длина ткани, меньше рядов, меньше площадь отходов, более крупный непрерывный остаток справа.</div>
   </div>
 
   <div class="card">
@@ -545,7 +561,14 @@ function makeOrders(pieces){
   addOrder('width_asc', clonePieceList(base).sort((a,b)=>a.w-b.w || b.h-a.h));
 
   // Группировка похожих высот уменьшает потери по длине: в одном ряду лучше держать детали близкой высоты.
-  [2, 5, 10].forEach(step=>{
+  addOrder('narrow_fillers_first', clonePieceList(base).sort((a,b)=>a.w-b.w || b.h-a.h));
+  addOrder('wide_then_narrow_mix', clonePieceList(base).sort((a,b)=>{
+    const aw=a.w>150 ? 0 : 1;
+    const bw=b.w>150 ? 0 : 1;
+    return aw-bw || b.h-a.h || b.w-a.w;
+  }));
+
+  [2, 5, 10, 15].forEach(step=>{
     addOrder('height_bucket_'+step, clonePieceList(base).sort((a,b)=>{
       const ba=Math.round(a.h/step)*step;
       const bb=Math.round(b.h/step)*step;
@@ -577,6 +600,11 @@ function packRowsGreedy(pieces, rollWidth, mode){
           score=addedLength*5000 + remainingWidth*20 + heightGap*10;
         } else if(mode==='similarHeight'){
           score=heightGap*1200 + remainingWidth*20 + addedLength*300;
+        } else if(mode==='residueStrip'){
+          // Поощряем похожий остаток справа, чтобы получить длинную деловую полосу.
+          const avgResidue = rows.length ? rows.reduce((s,r)=>s+(rollWidth-r.used),0)/rows.length : remainingWidth;
+          const residueGap = Math.abs(remainingWidth-avgResidue);
+          score=residueGap*1800 + addedLength*700 + remainingWidth*30 + heightGap*20;
         } else {
           score=addedLength*2500 + remainingWidth*80 + wasteArea*0.05 + heightGap*6;
         }
@@ -608,18 +636,73 @@ function rowMetrics(rows, rollWidth){
   const usedArea=rows.reduce((s,r)=>s+r.items.reduce((x,p)=>x+p.w*p.h,0),0);
   const totalArea=rollWidth*totalFolds;
   const usePct=totalArea ? usedArea/totalArea*100 : 0;
-  return {rowsCount:rows.length,totalFolds,wasteWidth,wasteArea,usedArea,totalArea,usePct};
+  const q=wasteQuality(rows, rollWidth);
+  return {
+    rowsCount:rows.length,
+    totalFolds,
+    wasteWidth,
+    wasteArea,
+    usedArea,
+    totalArea,
+    usePct,
+    maxContinuousArea:q.maxContinuousArea,
+    continuityScore:q.continuityScore,
+    fragments:q.fragments,
+    variance:q.variance,
+    residues:q.residues
+  };
+}
+
+function wasteQuality(rows, rollWidth){
+  // Чем больше непрерывных одинаковых остатков справа, тем лучше.
+  // Остаток считается полезнее, если он широкий и повторяется подряд в нескольких рядах.
+  const residues=rows.map(r=>Math.max(0, rollWidth-r.used));
+  let continuityScore=0;
+  let maxContinuousArea=0;
+  let fragments=0;
+
+  for(let i=0;i<rows.length;i++){
+    const w=residues[i];
+    if(w>0.5){
+      fragments++;
+      let h=rows[i].height;
+      let j=i+1;
+      while(j<rows.length && Math.abs(residues[j]-w)<=8){
+        h+=rows[j].height;
+        j++;
+      }
+      const area=w*h;
+      maxContinuousArea=Math.max(maxContinuousArea, area);
+      continuityScore+=area;
+    }
+  }
+
+  const variance = residues.length
+    ? residues.reduce((s,w)=>s+Math.pow(w-(residues.reduce((a,b)=>a+b,0)/residues.length),2),0)/residues.length
+    : 0;
+
+  return {residues, continuityScore, maxContinuousArea, fragments, variance};
 }
 
 function betterMetrics(a,b){
   if(!b) return true;
-  // Главный приоритет: меньше длина рулона в складках.
+
+  // 1. Главный критерий — меньше общая длина ткани в складках.
   if(Math.round(a.totalFolds)!==Math.round(b.totalFolds)) return a.totalFolds<b.totalFolds;
-  // Затем меньше рядов/резов.
+
+  // 2. Затем меньше количество рядов/поперечных резов.
   if(a.rowsCount!==b.rowsCount) return a.rowsCount<b.rowsCount;
-  // Затем меньше площадь отходов.
+
+  // 3. Затем меньше площадь отходов.
   if(Math.round(a.wasteArea)!==Math.round(b.wasteArea)) return a.wasteArea<b.wasteArea;
-  // Затем выше использование.
+
+  // 4. Затем качественный остаток: один крупный лучше нескольких мелких.
+  if(Math.round(a.maxContinuousArea)!==Math.round(b.maxContinuousArea)) return a.maxContinuousArea>b.maxContinuousArea;
+
+  // 5. Чем меньше разброс остатков по ширине, тем больше шанс получить непрерывную полосу справа.
+  if(Math.round(a.variance)!==Math.round(b.variance)) return a.variance<b.variance;
+
+  // 6. При равных условиях — выше использование.
   return a.usePct>b.usePct;
 }
 
@@ -671,18 +754,66 @@ function improveRows(rows, rollWidth){
     }
   }
 
+  // Вторая локальная оптимизация: пробуем менять детали местами между рядами,
+  // чтобы остатки справа стали более одинаковыми и образовывали одну длинную полосу.
+  let swapped=true;
+  let swapGuard=0;
+  while(swapped && swapGuard<80){
+    swapped=false;
+    swapGuard++;
+    let current=rowMetrics(rows, rollWidth);
+
+    outerSwap:
+    for(let a=0; a<rows.length; a++){
+      for(let b=a+1; b<rows.length; b++){
+        for(let ia=0; ia<rows[a].items.length; ia++){
+          for(let ib=0; ib<rows[b].items.length; ib++){
+            const pa=rows[a].items[ia];
+            const pb=rows[b].items[ib];
+
+            const newUsedA=rows[a].used-pa.w+pb.w;
+            const newUsedB=rows[b].used-pb.w+pa.w;
+            if(newUsedA>rollWidth || newUsedB>rollWidth) continue;
+
+            const test=rows.map(r=>({items:r.items.slice(), used:r.used, height:r.height}));
+            test[a].items[ia]=pb;
+            test[b].items[ib]=pa;
+            [a,b].forEach(i=>{
+              test[i].used=test[i].items.reduce((s,p)=>s+p.w,0);
+              test[i].height=test[i].items.length ? Math.max(...test[i].items.map(p=>p.h)) : 0;
+            });
+
+            const metrics=rowMetrics(test, rollWidth);
+            if(betterMetrics(metrics,current)){
+              rows=test;
+              swapped=true;
+              break outerSwap;
+            }
+          }
+        }
+      }
+    }
+  }
+
   rows.forEach(r=>{
     r.items.sort((a,b)=>b.w-a.w || b.h-a.h);
     r.used=r.items.reduce((s,p)=>s+p.w,0);
     r.height=r.items.length ? Math.max(...r.items.map(p=>p.h)) : 0;
   });
 
-  rows.sort((a,b)=>b.height-a.height || (rollWidth-b.used)-(rollWidth-a.used));
+  // Ряды с похожим остатком ставим рядом — так остаток визуально получается одной полосой.
+  rows.sort((a,b)=>{
+    const wa=rollWidth-a.used;
+    const wb=rollWidth-b.used;
+    if(Math.abs(wb-wa)>8) return wb-wa;
+    return b.height-a.height;
+  });
+
   return rows;
 }
 
 function packRows(pieces, rollWidth){
-  const modes=['balanced','tightWidth','lowHeightIncrease','similarHeight'];
+  const modes=['balanced','tightWidth','lowHeightIncrease','similarHeight','residueStrip'];
   const orders=makeOrders(pieces);
   let bestRows=[];
   let best=null;
@@ -742,7 +873,7 @@ function renderLayout(rows, rollWidth, totalFolds){
   }
 
   const metrics=rowMetrics(rows, rollWidth);
-  note.textContent=`${fabric}. Ширина рулона: ${rollWidth} см. Общая длина раскроя: ${formatFolds(totalFolds)} складок. Использование: ${Math.round(metrics.usePct)}%. Остаток по ширине: ${metrics.wasteWidth.toFixed(1)} см.`;
+  note.textContent=`${fabric}. Ширина рулона: ${rollWidth} см. Общая длина раскроя: ${formatFolds(totalFolds)} складок. Использование: ${Math.round(metrics.usePct)}%. Остаток по ширине: ${metrics.wasteWidth.toFixed(1)} см. Крупный непрерывный остаток: ${metrics.maxContinuousArea ? metrics.maxContinuousArea.toFixed(0) : 0} усл. ед.`;
 
   rows.forEach(row=>{
     const rowDiv=document.createElement('div');
@@ -766,9 +897,10 @@ function renderLayout(rows, rollWidth, totalFolds){
     const wasteWidth=rollWidth-row.used;
     if(wasteWidth>0){
       const w=document.createElement('div');
-      w.className='piece waste';
+      const isGoodResidue = wasteWidth >= 25;
+      w.className='piece waste' + (isGoodResidue ? ' good-residue' : '');
       w.style.flexBasis=(wasteWidth/rollWidth*100)+'%';
-      w.innerHTML=`остаток<br>${wasteWidth.toFixed(1)} см`;
+      w.innerHTML=isGoodResidue ? `деловой<br>остаток<br>${wasteWidth.toFixed(1)} см` : `остаток<br>${wasteWidth.toFixed(1)} см`;
       piecesDiv.appendChild(w);
     }
 
