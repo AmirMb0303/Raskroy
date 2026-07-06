@@ -390,6 +390,111 @@
     padding:10px;
   }
 
+
+  /* Печать A4: карта раскроя должна помещаться по ширине листа */
+  @page{
+    size:A4 landscape;
+    margin:7mm;
+  }
+  @media print{
+    html,body{
+      width:100%;
+      overflow:visible!important;
+    }
+    body{
+      background:#fff!important;
+      padding:0!important;
+      font-size:10px;
+    }
+    .wrap{
+      width:100%!important;
+      max-width:none!important;
+      margin:0!important;
+    }
+    .card{
+      padding:6px!important;
+      margin-bottom:6px!important;
+      border-radius:6px!important;
+      box-shadow:none!important;
+      page-break-inside:auto;
+      break-inside:auto;
+    }
+    .layout-head{
+      margin-bottom:4px!important;
+    }
+    .layout-head h2,.items-card h2{
+      font-size:14px!important;
+      margin-bottom:3px!important;
+    }
+    .note,.quality-note{
+      font-size:9px!important;
+      line-height:1.25!important;
+      padding:4px!important;
+      margin-top:4px!important;
+    }
+    .roll{
+      width:100%!important;
+      max-width:100%!important;
+      overflow:visible!important;
+      padding:3px!important;
+      border-width:1px!important;
+      border-radius:6px!important;
+    }
+    .row{
+      width:100%!important;
+      min-width:0!important;
+      break-inside:avoid;
+      page-break-inside:avoid;
+    }
+    .row-label{
+      width:48px!important;
+      flex:0 0 48px!important;
+      font-size:8px!important;
+      padding:2px!important;
+    }
+    .row-pieces{
+      min-width:0!important;
+      width:calc(100% - 48px)!important;
+      flex:1 1 auto!important;
+    }
+    .stack-col{
+      min-width:0!important;
+      margin:1px!important;
+    }
+    .piece{
+      min-width:0!important;
+      min-height:14px!important;
+      margin:1px!important;
+      padding:1px!important;
+      border-radius:3px!important;
+      font-size:7px!important;
+      line-height:1.05!important;
+      overflow:hidden!important;
+      word-break:break-word;
+    }
+    .piece small{
+      font-size:6px!important;
+      line-height:1!important;
+    }
+    .vertical-waste{
+      min-height:8px!important;
+      font-size:6px!important;
+    }
+    .summary{
+      grid-template-columns:repeat(4,1fr)!important;
+      gap:4px!important;
+    }
+    .sum-box{
+      padding:5px!important;
+      border-radius:6px!important;
+    }
+    .sum-box span{font-size:8px!important}
+    .sum-box strong{font-size:12px!important}
+    table{font-size:8px!important}
+    th,td{padding:3px!important;font-size:8px!important}
+    td input{height:18px!important;font-size:8px!important;padding:0 3px!important}
+  }
+
 </style>
 </head>
 <body>
