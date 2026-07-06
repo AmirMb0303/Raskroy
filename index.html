@@ -512,7 +512,7 @@
     <div class="actions no-print">
       <button onclick="addRow()">Добавить строку</button>
       <button class="secondary" onclick="calculate()">Рассчитать карту</button>
-      <button class="secondary" onclick="window.print()">Печать / PDF</button>
+      <button class="secondary" type="button" onclick="printDocument(event)">Печать / PDF</button>
       <button class="danger" onclick="clearRows()">Очистить</button>
     </div>
   </div>
@@ -561,6 +561,33 @@
 
 <script>
 const tbody = document.getElementById('tbody');
+
+function printDocument(event){
+  if(event) event.preventDefault();
+
+  // На телефоне активное поле ввода и фиксированная нижняя панель иногда мешают вызову печати.
+  const active=document.activeElement;
+  if(active && typeof active.blur==='function') active.blur();
+
+  calculate();
+  document.body.classList.add('print-preparing');
+
+  const runPrint=()=>{
+    try{
+      window.focus();
+      window.print();
+    } finally {
+      setTimeout(()=>document.body.classList.remove('print-preparing'), 800);
+    }
+  };
+
+  if(window.requestAnimationFrame){
+    requestAnimationFrame(()=>setTimeout(runPrint, 120));
+  } else {
+    setTimeout(runPrint, 120);
+  }
+}
+
 
 function addRow(w='', h='', q=1){
   const tr = document.createElement('tr');
