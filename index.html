@@ -9,116 +9,393 @@
 <title>Карта раскроя ткани плиссе</title>
 <style>
   :root{
-    --bg:#f3f4f6;--card:#fff;--dark:#111827;--muted:#6b7280;--line:#e5e7eb;--soft:#f9fafb;
+    --bg:#f3f4f6;
+    --card:#fff;
+    --dark:#111827;
+    --muted:#6b7280;
+    --line:#e5e7eb;
+    --accent:#111827;
+    --soft:#f9fafb;
   }
   *{box-sizing:border-box}
-  body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:#111827;padding:18px}
+  body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:var(--bg);
+    color:#111827;
+    padding:18px;
+  }
   .wrap{max-width:1180px;margin:0 auto}
-  .header{background:var(--dark);color:#fff;border-radius:18px;padding:18px 20px;margin-bottom:16px;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+  .header{
+    background:var(--dark);
+    color:#fff;
+    border-radius:18px;
+    padding:18px 20px;
+    margin-bottom:16px;
+    box-shadow:0 8px 24px rgba(0,0,0,.12);
+  }
   .header p{margin:0;color:#d1d5db;font-size:14px}
-  .card{background:var(--card);border-radius:18px;padding:16px;margin-bottom:16px;box-shadow:0 6px 20px rgba(0,0,0,.08)}
+  .card{
+    background:var(--card);
+    border-radius:18px;
+    padding:16px;
+    margin-bottom:16px;
+    box-shadow:0 6px 20px rgba(0,0,0,.08);
+  }
   .controls{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
   label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
-  input{width:100%;height:40px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font-size:14px;background:#fff}
-  button{border:0;border-radius:12px;padding:11px 14px;background:#111827;color:#fff;font-weight:700;cursor:pointer}
+  input{
+    width:100%;
+    height:40px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:0 10px;
+    font-size:14px;
+    background:#fff;
+  }
+  button{
+    border:0;
+    border-radius:12px;
+    padding:11px 14px;
+    background:var(--accent);
+    color:#fff;
+    font-weight:700;
+    cursor:pointer;
+  }
   button.secondary{background:#e5e7eb;color:#111827}
   button.danger{background:#7f1d1d;color:#fff}
   .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-  table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border-radius:14px}
-  th{background:#111827;color:#fff;font-size:13px;text-align:left;padding:10px}
-  td{background:#fff;border-bottom:1px solid var(--line);padding:8px}
+  table{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0;
+    overflow:hidden;
+    border-radius:14px;
+  }
+  th{
+    background:#111827;
+    color:#fff;
+    font-size:13px;
+    text-align:left;
+    padding:10px;
+  }
+  td{
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    padding:8px;
+  }
   td input{height:36px}
   tr:last-child td{border-bottom:0}
   .table-wrap{overflow:auto}
-  .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-  .sum-box{background:#111827;color:#fff;border-radius:14px;padding:14px}
+  .summary{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+  }
+  .sum-box{
+    background:#111827;
+    color:#fff;
+    border-radius:14px;
+    padding:14px;
+  }
   .sum-box span{display:block;font-size:12px;color:#d1d5db}
   .sum-box strong{font-size:22px}
-  .layout-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+  .layout-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+  }
   .layout-head h2,.items-card h2{margin:0 0 8px 0;font-size:20px}
   .note{font-size:13px;color:var(--muted)}
-  .roll{width:100%;background:var(--soft);border:2px solid #111827;border-radius:14px;padding:10px;overflow:auto}
-  .map{
-    position:relative;
-    width:900px;
-    min-height:220px;
-    background:#fff;
+  .roll{
+    width:100%;
+    background:var(--soft);
     border:2px solid #111827;
-    overflow:hidden;
+    border-radius:14px;
+    padding:10px;
+    overflow:auto;
   }
-  .map-grid{
-    position:absolute;inset:0;
-    background-image:linear-gradient(#f3f4f6 1px, transparent 1px),linear-gradient(90deg,#f3f4f6 1px, transparent 1px);
-    background-size:30px 30px;
-    pointer-events:none;
+  .row{
+    display:flex;
+    align-items:stretch;
+    border-bottom:1px dashed #9ca3af;
+    min-width:760px;
+    position:relative;
   }
+  .row:last-child{border-bottom:0}
+  .row-label{
+    width:92px;
+    flex:0 0 92px;
+    font-size:13px;
+    font-weight:700;
+    color:#111827;
+    padding:8px 6px;
+    background:#fff;
+    border-right:1px solid #e5e7eb;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+  .row-pieces{display:flex;flex:1}
   .piece{
-    position:absolute;
-    border:1.5px solid #111827;
+    border:1px solid #111827;
     background:#dbeafe;
-    border-radius:6px;
+    margin:4px 2px;
+    border-radius:8px;
     display:flex;
     align-items:center;
     justify-content:center;
     text-align:center;
     font-size:12px;
     font-weight:700;
-    line-height:1.25;
-    padding:3px;
+    min-width:42px;
+    min-height:58px;
+    padding:4px;
     overflow:hidden;
+    line-height:1.25;
   }
   .piece small{font-size:11px;font-weight:700}
-  .waste-rect{
-    position:absolute;
-    border:1px dashed #6b7280;
-    background:repeating-linear-gradient(135deg,#f3f4f6 0,#f3f4f6 6px,#e5e7eb 6px,#e5e7eb 12px);
-    color:#374151;
-    font-size:11px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
-    overflow:hidden;
+  .waste{
+    background:#f3f4f6;
+    border:1px dashed #9ca3af;
+    color:#6b7280;
+    font-weight:400;
   }
-  .quality-note{margin-top:8px;font-size:13px;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:10px}
-  .mobile-card-list{display:none}
+
+  .stack-col{
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    margin:4px 2px;
+    min-width:42px;
+  }
+  .stack-col .piece{
+    width:100%;
+    margin:0 0 3px 0;
+    min-height:28px;
+  }
+  .stack-col .piece:last-child{margin-bottom:0}
+  .vertical-waste{
+    min-height:18px!important;
+    font-size:10px!important;
+  }
+
+  .cuts-list{
+    margin:0;
+    padding-left:22px;
+    columns:2;
+    column-gap:34px;
+  }
+  .cuts-list li{
+    break-inside:avoid;
+    margin:0 0 6px 0;
+    font-size:14px;
+  }
   @media(max-width:760px){
-    html,body{width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%}
-    body{padding:10px;padding-bottom:92px}
-    .wrap{max-width:100%}
-    .header{border-radius:16px;padding:14px;margin-bottom:10px}
-    .header p{font-size:13px;line-height:1.35}
-    .card{border-radius:16px;padding:12px;margin-bottom:12px}
+    body{padding:10px}
     .controls,.summary{grid-template-columns:1fr}
-    input{height:46px;font-size:16px;border-radius:12px}
-    button{min-height:46px;font-size:15px;border-radius:12px;touch-action:manipulation}
-    .actions{position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(255,255,255,.96);border-top:1px solid #e5e7eb;padding:8px 10px calc(8px + env(safe-area-inset-bottom));display:grid;grid-template-columns:1fr 1fr;gap:8px;box-shadow:0 -8px 22px rgba(0,0,0,.12);margin:0}
-    .actions .danger{grid-column:span 2}
-    .table-wrap{display:none}
-    .mobile-card-list{display:block}
-    .mobile-item-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:12px;margin-bottom:10px;box-shadow:0 3px 12px rgba(0,0,0,.04)}
-    .mobile-item-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;font-weight:700}
-    .mobile-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .mobile-folds{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:12px;font-size:16px;font-weight:700;text-align:center}
-    .roll{padding:8px;overflow-x:auto;-webkit-overflow-scrolling:touch}
-    .summary{grid-template-columns:1fr 1fr;gap:8px}
-    .sum-box strong{font-size:18px}
+    .card{padding:12px}
+    th,td{font-size:12px;padding:6px}
+    .actions button{flex:1}
+    .layout-head{display:block}
+    .roll{padding:6px}
+    .row{min-width:680px}
+    .cuts-list{columns:1}
   }
   @media print{
-    body{background:#fff;padding:0!important}
-    .no-print,.actions,.header,.mobile-card-list{display:none!important}
-    .table-wrap{display:block!important}
-    .card{box-shadow:none;border:1px solid #ddd;border-radius:8px;margin-bottom:10px;page-break-inside:avoid}
-    .piece,.sum-box,th,.waste-rect{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+    body{background:#fff;padding:0}
+    .no-print,.actions,.header{display:none!important}
+    .card{
+      box-shadow:none;
+      border:1px solid #ddd;
+      border-radius:8px;
+      margin-bottom:10px;
+      page-break-inside:avoid;
+    }
+    .items-card{page-break-before:auto}
+    .piece,.sum-box,th{
+      print-color-adjust:exact;
+      -webkit-print-color-adjust:exact;
+    }
     .summary{grid-template-columns:repeat(4,1fr)}
-    .map{width:100%;height:auto}
+    .cuts-list{columns:2}
   }
+
+  .mobile-card-list{display:none}
+
+  @media(max-width:760px){
+    html,body{
+      width:100%;
+      overflow-x:hidden;
+      -webkit-text-size-adjust:100%;
+    }
+    body{
+      padding:10px;
+      padding-bottom:92px;
+      background:#f3f4f6;
+    }
+    .wrap{max-width:100%}
+    .header{
+      border-radius:16px;
+      padding:14px;
+      margin-bottom:10px;
+    }
+    .header p{
+      font-size:13px;
+      line-height:1.35;
+    }
+    .card{
+      border-radius:16px;
+      padding:12px;
+      margin-bottom:12px;
+    }
+    input{
+      height:46px;
+      font-size:16px;
+      border-radius:12px;
+    }
+    button{
+      min-height:46px;
+      font-size:15px;
+      border-radius:12px;
+      touch-action:manipulation;
+    }
+    .actions{
+      position:fixed;
+      left:0;
+      right:0;
+      bottom:0;
+      z-index:50;
+      background:rgba(255,255,255,.96);
+      border-top:1px solid #e5e7eb;
+      padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      box-shadow:0 -8px 22px rgba(0,0,0,.12);
+      margin:0;
+    }
+    .actions button{
+      width:100%;
+      padding:10px 8px;
+    }
+    .actions .danger{
+      grid-column:span 2;
+    }
+    .table-wrap{
+      display:none;
+    }
+    .mobile-card-list{
+      display:block;
+    }
+    .mobile-item-card{
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:14px;
+      padding:12px;
+      margin-bottom:10px;
+      box-shadow:0 3px 12px rgba(0,0,0,.04);
+    }
+    .mobile-item-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+      font-weight:700;
+    }
+    .mobile-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+    .mobile-grid .full{grid-column:span 2}
+    .mobile-folds{
+      background:#f9fafb;
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      padding:12px;
+      font-size:16px;
+      font-weight:700;
+      text-align:center;
+    }
+    .roll{
+      border-radius:14px;
+      padding:8px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+    .row{
+      min-width:720px;
+    }
+    .row-label{
+      width:84px;
+      flex-basis:84px;
+      font-size:12px;
+      padding:6px 4px;
+      position:sticky;
+      left:0;
+      z-index:3;
+      box-shadow:2px 0 6px rgba(0,0,0,.08);
+    }
+    .piece{
+      min-height:64px;
+      font-size:12px;
+      border-radius:8px;
+    }
+    .summary{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+    }
+    .sum-box{
+      padding:12px;
+      border-radius:14px;
+    }
+    .sum-box strong{font-size:18px}
+    .cuts-list{
+      columns:1;
+      padding-left:20px;
+    }
+    .cuts-list li{
+      font-size:14px;
+      margin-bottom:8px;
+    }
+    .items-card h2,.layout-head h2{
+      font-size:18px;
+    }
+  }
+
+  @media print{
+    body{padding-bottom:0!important}
+    .mobile-card-list{display:none!important}
+    .table-wrap{display:block!important}
+  }
+
+
+  .waste.good-residue{
+    background:repeating-linear-gradient(135deg,#f3f4f6 0,#f3f4f6 6px,#e5e7eb 6px,#e5e7eb 12px);
+    color:#374151;
+  }
+  .quality-note{
+    margin-top:8px;
+    font-size:13px;
+    color:#374151;
+    background:#f9fafb;
+    border:1px solid #e5e7eb;
+    border-radius:12px;
+    padding:10px;
+  }
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <p>2D-карта раскроя ткани плиссе: изделия можно размещать рядом и друг над другом внутри общей высоты раскроя</p>
+    <p>Раскладка деталей по стандартной ширине рулона 300 см с расчетом высоты раскроя в складках</p>
   </div>
 
   <div class="card no-print">
@@ -128,14 +405,15 @@
       <div><label>Припуск к каждой детали, см</label><input id="allowance" type="number" value="1" min="0" step="0.5"></div>
     </div>
     <div class="actions no-print">
-      <button type="button" id="addBtn">Добавить строку</button>
-      <button type="button" class="secondary" id="calcBtn">Рассчитать карту</button>
-      <button type="button" class="secondary" id="printBtn">Печать / PDF</button>
-      <button type="button" class="danger" id="clearBtn">Очистить</button>
+      <button onclick="addRow()">Добавить строку</button>
+      <button class="secondary" onclick="calculate()">Рассчитать карту</button>
+      <button class="secondary" onclick="window.print()">Печать / PDF</button>
+      <button class="danger" onclick="clearRows()">Очистить</button>
     </div>
   </div>
 
-  <div class="card items-card">
+
+<div class="card items-card">
     <h2>Таблица изделий</h2>
     <div class="table-wrap">
       <table>
@@ -159,11 +437,11 @@
     <div class="layout-head">
       <div>
         <h2>Карта раскроя</h2>
-        <div class="note" id="layoutNote">После расчета здесь появится 2D-схема раскладки.</div>
+        <div class="note" id="layoutNote">После расчета здесь появится схема раскладки. Высота будет показана в складках.</div>
       </div>
     </div>
     <div class="roll" id="layout"></div>
-    <div class="quality-note">Алгоритм использует 2D-размещение: например, в высоту 68 складок можно поставить друг над другом изделия 23 и 32 складки, если они помещаются по ширине.</div>
+    <div class="quality-note">Алгоритм использует 2D-раскладку: может ставить несколько изделий вертикально внутри одной секции, уменьшает длину ткани и старается оставлять крупный деловой остаток у края.</div>
   </div>
 
   <div class="card">
@@ -177,27 +455,17 @@
 </div>
 
 <script>
-const ROLL_WIDTH = 300;
-const SCALE_X = 3;   // 300 см = 900 px
-const MIN_MAP_HEIGHT = 220;
 const tbody = document.getElementById('tbody');
-
-document.getElementById('addBtn').addEventListener('click',()=>addRow());
-document.getElementById('calcBtn').addEventListener('click',calculate);
-document.getElementById('printBtn').addEventListener('click',()=>window.print());
-document.getElementById('clearBtn').addEventListener('click',clearRows);
 
 function addRow(w='', h='', q=1){
   const tr = document.createElement('tr');
   tr.innerHTML = `
     <td class="num"></td>
-    <td><input type="number" inputmode="decimal" min="1" value="${w}"></td>
-    <td><input type="number" inputmode="decimal" min="1" value="${h}"></td>
+    <td><input type="number" inputmode="decimal" min="1" value="${w}" oninput="calculate()"></td>
+    <td><input type="number" inputmode="decimal" min="1" value="${h}" oninput="calculate()"></td>
     <td class="folds-cell">0</td>
-    <td><input type="number" inputmode="numeric" min="1" value="${q}"></td>
-    <td class="no-print"><button type="button" class="danger remove-row">×</button></td>`;
-  tr.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',calculate));
-  tr.querySelector('.remove-row').addEventListener('click',()=>{tr.remove();renumber();calculate();});
+    <td><input type="number" inputmode="numeric" min="1" value="${q}" oninput="calculate()"></td>
+    <td class="no-print"><button class="danger" onclick="this.closest('tr').remove();renumber();calculate()">×</button></td>`;
   tbody.appendChild(tr);
   renumber();
   calculate();
@@ -208,13 +476,45 @@ function renumber(){
   renderMobileCards();
 }
 
+function renderMobileCards(){
+  const holder=document.getElementById('mobileCards');
+  if(!holder) return;
+  holder.innerHTML='';
+  [...tbody.querySelectorAll('tr')].forEach((tr,i)=>{
+    const inputs=tr.querySelectorAll('input');
+    const foldsText=tr.querySelector('.folds-cell')?.textContent || '0';
+    const card=document.createElement('div');
+    card.className='mobile-item-card';
+    card.innerHTML=`
+      <div class="mobile-item-top">
+        <div>№ ${i+1}</div>
+        <button class="danger" onclick="this.closest('.mobile-item-card')._row.remove();renumber();calculate()">Удалить</button>
+      </div>
+      <div class="mobile-grid">
+        <div><label>Ширина, см</label><input type="number" inputmode="decimal" min="1" value="${inputs[0].value}"></div>
+        <div><label>Высота, см</label><input type="number" inputmode="decimal" min="1" value="${inputs[1].value}"></div>
+        <div><label>Кол-во</label><input type="number" inputmode="numeric" min="1" value="${inputs[2].value}"></div>
+        <div><label>Складок</label><div class="mobile-folds">${foldsText}</div></div>
+      </div>`;
+    card._row=tr;
+    const mobInputs=card.querySelectorAll('input');
+    mobInputs[0].oninput=()=>{inputs[0].value=mobInputs[0].value; calculate();};
+    mobInputs[1].oninput=()=>{inputs[1].value=mobInputs[1].value; calculate();};
+    mobInputs[2].oninput=()=>{inputs[2].value=mobInputs[2].value; calculate();};
+    holder.appendChild(card);
+  });
+}
+
 function clearRows(){
   tbody.innerHTML='';
   addRow();
 }
 
 function calcFolds(heightCm){
-  return heightCm < 60 ? heightCm / 2 : heightCm / 2.2;
+  if(heightCm < 60){
+    return heightCm / 2;
+  }
+  return heightCm / 2.2;
 }
 
 function formatFolds(value){
@@ -237,36 +537,6 @@ function getRowsData(){
   return rows;
 }
 
-function renderMobileCards(){
-  const holder=document.getElementById('mobileCards');
-  if(!holder) return;
-  holder.innerHTML='';
-  [...tbody.querySelectorAll('tr')].forEach((tr,i)=>{
-    const inputs=tr.querySelectorAll('input');
-    const foldsText=tr.querySelector('.folds-cell')?.textContent || '0';
-    const card=document.createElement('div');
-    card.className='mobile-item-card';
-    card.innerHTML=`
-      <div class="mobile-item-top">
-        <div>№ ${i+1}</div>
-        <button type="button" class="danger">Удалить</button>
-      </div>
-      <div class="mobile-grid">
-        <div><label>Ширина, см</label><input type="number" inputmode="decimal" min="1" value="${inputs[0].value}"></div>
-        <div><label>Высота, см</label><input type="number" inputmode="decimal" min="1" value="${inputs[1].value}"></div>
-        <div><label>Кол-во</label><input type="number" inputmode="numeric" min="1" value="${inputs[2].value}"></div>
-        <div><label>Складок</label><div class="mobile-folds">${foldsText}</div></div>
-      </div>`;
-    const btn=card.querySelector('button');
-    btn.addEventListener('click',()=>{tr.remove();renumber();calculate();});
-    const mobInputs=card.querySelectorAll('input');
-    mobInputs[0].addEventListener('input',()=>{inputs[0].value=mobInputs[0].value; calculate();});
-    mobInputs[1].addEventListener('input',()=>{inputs[1].value=mobInputs[1].value; calculate();});
-    mobInputs[2].addEventListener('input',()=>{inputs[2].value=mobInputs[2].value; calculate();});
-    holder.appendChild(card);
-  });
-}
-
 function getPieces(){
   const allowance = parseFloat(document.getElementById('allowance').value)||0;
   const pieces=[];
@@ -287,163 +557,291 @@ function getPieces(){
   return pieces;
 }
 
-function clonePieces(arr){
-  return arr.map(p=>Object.assign({},p));
+function clonePieceList(list){
+  return list.map(p=>Object.assign({}, p));
 }
 
 function makeOrders(pieces){
+  const base=clonePieceList(pieces);
   const orders=[];
-  const add=(name,arr)=>orders.push({name,arr});
-  add('area_desc', clonePieces(pieces).sort((a,b)=>(b.w*b.h)-(a.w*a.h)||b.h-a.h||b.w-a.w));
-  add('height_desc', clonePieces(pieces).sort((a,b)=>b.h-a.h||b.w-a.w));
-  add('width_desc', clonePieces(pieces).sort((a,b)=>b.w-a.w||b.h-a.h));
-  add('height_bucket_5', clonePieces(pieces).sort((a,b)=>Math.round(b.h/5)-Math.round(a.h/5)||b.w-a.w));
-  add('narrow_after_tall', clonePieces(pieces).sort((a,b)=>b.h-a.h||a.w-b.w));
-  add('wide_after_tall', clonePieces(pieces).sort((a,b)=>b.h-a.h||b.w-a.w));
+
+  const addOrder=(name, arr)=>{
+    const key=arr.map(p=>`${p.line}:${p.realW}:${p.realH}:${p.w}:${Math.round(p.h*100)}`).join('|');
+    if(!orders.some(o=>o.key===key)){
+      orders.push({name, key, arr});
+    }
+  };
+
+  addOrder('height_desc', clonePieceList(base).sort((a,b)=>b.h-a.h || b.w-a.w));
+  addOrder('width_desc', clonePieceList(base).sort((a,b)=>b.w-a.w || b.h-a.h));
+  addOrder('area_desc', clonePieceList(base).sort((a,b)=>(b.w*b.h)-(a.w*a.h) || b.h-a.h));
+  addOrder('max_side_desc', clonePieceList(base).sort((a,b)=>Math.max(b.w,b.h)-Math.max(a.w,a.h)));
+  addOrder('height_asc', clonePieceList(base).sort((a,b)=>a.h-b.h || b.w-a.w));
+  addOrder('width_asc', clonePieceList(base).sort((a,b)=>a.w-b.w || b.h-a.h));
+
+  // Группировка похожих высот уменьшает потери по длине: в одном ряду лучше держать детали близкой высоты.
+  addOrder('narrow_fillers_first', clonePieceList(base).sort((a,b)=>a.w-b.w || b.h-a.h));
+  addOrder('wide_then_narrow_mix', clonePieceList(base).sort((a,b)=>{
+    const aw=a.w>150 ? 0 : 1;
+    const bw=b.w>150 ? 0 : 1;
+    return aw-bw || b.h-a.h || b.w-a.w;
+  }));
+
+  [2, 5, 10, 15].forEach(step=>{
+    addOrder('height_bucket_'+step, clonePieceList(base).sort((a,b)=>{
+      const ba=Math.round(a.h/step)*step;
+      const bb=Math.round(b.h/step)*step;
+      return bb-ba || b.w-a.w || b.h-a.h;
+    }));
+  });
+
   return orders;
 }
 
-function scoreFreeRect(rect, piece, mode){
-  const leftoverW = rect.w - piece.w;
-  const leftoverH = rect.h - piece.h;
-  if(leftoverW < -0.0001 || leftoverH < -0.0001) return Infinity;
 
-  const shortSide = Math.min(leftoverW, leftoverH);
-  const longSide = Math.max(leftoverW, leftoverH);
-  const areaWaste = rect.w*rect.h - piece.w*piece.h;
-
-  if(mode === 'bestArea') return areaWaste*100 + shortSide*10 + longSide;
-  if(mode === 'bestShortSide') return shortSide*1000 + longSide*10 + areaWaste;
-  if(mode === 'bottomLeft') return rect.y*100000 + rect.x*1000 + areaWaste;
-  if(mode === 'rightResidue') return leftoverW*500 + leftoverH*20 + rect.y*1000 + areaWaste;
-  return areaWaste*100 + shortSide*50 + rect.y*10;
+function cloneRows2D(rows){
+  return rows.map(r=>({
+    columns:r.columns.map(c=>({width:c.width, usedH:c.usedH, items:c.items.slice()})),
+    used:r.used,
+    height:r.height
+  }));
 }
 
-function splitFreeRect(fr, used){
-  const out=[];
-  const x1=fr.x, y1=fr.y, x2=fr.x+fr.w, y2=fr.y+fr.h;
-  const ux1=used.x, uy1=used.y, ux2=used.x+used.w, uy2=used.y+used.h;
-
-  if(ux1>=x2 || ux2<=x1 || uy1>=y2 || uy2<=y1){
-    out.push(fr);
-    return out;
-  }
-
-  if(uy1>y1) out.push({x:x1,y:y1,w:fr.w,h:uy1-y1});
-  if(uy2<y2) out.push({x:x1,y:uy2,w:fr.w,h:y2-uy2});
-  if(ux1>x1) out.push({x:x1,y:y1,w:ux1-x1,h:fr.h});
-  if(ux2<x2) out.push({x:ux2,y:y1,w:x2-ux2,h:fr.h});
-
-  return out.filter(r=>r.w>0.1 && r.h>0.1);
-}
-
-function pruneFreeRects(rects){
-  const pruned=[];
-  rects.forEach((r,i)=>{
-    let contained=false;
-    for(let j=0;j<rects.length;j++){
-      if(i===j) continue;
-      const o=rects[j];
-      if(r.x>=o.x-0.001 && r.y>=o.y-0.001 &&
-         r.x+r.w<=o.x+o.w+0.001 && r.y+r.h<=o.y+o.h+0.001){
-        contained=true; break;
-      }
-    }
-    if(!contained) pruned.push(r);
+function normalizeRow(row){
+  row.used = row.columns.reduce((s,c)=>s+c.width,0);
+  row.height = row.columns.reduce((m,c)=>Math.max(m, ...c.items.map(p=>p.h)), 0);
+  row.columns.forEach(c=>{
+    c.width = Math.max(...c.items.map(p=>p.w));
+    c.usedH = c.items.reduce((s,p)=>s+p.h,0);
   });
-
-  // Убираем почти одинаковые свободные прямоугольники.
-  const unique=[];
-  pruned.forEach(r=>{
-    const exists=unique.some(u=>Math.abs(u.x-r.x)<0.1&&Math.abs(u.y-r.y)<0.1&&Math.abs(u.w-r.w)<0.1&&Math.abs(u.h-r.h)<0.1);
-    if(!exists) unique.push(r);
-  });
-  return unique;
+  row.used = row.columns.reduce((s,c)=>s+c.width,0);
 }
 
-function packMaxRects(pieces, rollWidth, mode){
-  const totalArea = pieces.reduce((s,p)=>s+p.w*p.h,0);
-  const maxH = Math.max(...pieces.map(p=>p.h), 1);
-  const initialHeight = Math.max(maxH, Math.ceil(totalArea/rollWidth*1.65), 120);
+function canPlaceInColumn(row, col, piece){
+  return piece.w <= col.width && col.usedH + piece.h <= row.height;
+}
 
-  let placed=[];
-  let free=[{x:0,y:0,w:rollWidth,h:initialHeight}];
+function placeInColumn(row, col, piece){
+  col.items.push(piece);
+  col.usedH += piece.h;
+}
+
+function placeNewColumn(row, piece){
+  row.columns.push({width:piece.w, usedH:piece.h, items:[piece]});
+  row.used += piece.w;
+}
+
+function rowFreeRight(row, rollWidth){
+  return Math.max(0, rollWidth-row.used);
+}
+
+function packRowsGreedy2D(pieces, rollWidth, mode){
+  const rows=[];
 
   pieces.forEach(piece=>{
-    let bestIndex=-1, bestScore=Infinity, bestRect=null;
+    let best=null;
 
-    for(let i=0;i<free.length;i++){
-      const fr=free[i];
-      const score=scoreFreeRect(fr,piece,mode);
-      if(score<bestScore){
-        bestScore=score;
-        bestIndex=i;
-        bestRect={x:fr.x,y:fr.y,w:piece.w,h:piece.h};
+    rows.forEach((row,rowIndex)=>{
+      if(piece.h <= row.height){
+        row.columns.forEach((col,colIndex)=>{
+          if(canPlaceInColumn(row,col,piece)){
+            const freeAfter = row.height - (col.usedH + piece.h);
+            const widthGap = col.width - piece.w;
+            const sideResidue = rowFreeRight(row, rollWidth);
+            let score;
+            if(mode==='verticalTight') score = freeAfter*3000 + widthGap*120 + sideResidue*3;
+            else if(mode==='keepSideResidue') score = Math.abs(sideResidue-60)*900 + freeAfter*900 + widthGap*80;
+            else if(mode==='lowWaste') score = freeAfter*1200 + widthGap*180 + sideResidue*20;
+            else score = freeAfter*1800 + widthGap*120 + rowIndex*3;
+            if(!best || score<best.score){
+              best={type:'column', rowIndex, colIndex, score};
+            }
+          }
+        });
+
+        if(row.used + piece.w <= rollWidth){
+          const sideAfter = rollWidth - (row.used + piece.w);
+          const heightGap = row.height - piece.h;
+          let score;
+          if(mode==='keepSideResidue') score = Math.abs(sideAfter-60)*1000 + heightGap*80;
+          else if(mode==='tightWidth') score = sideAfter*1600 + heightGap*70;
+          else score = sideAfter*600 + heightGap*100;
+          if(!best || score<best.score){
+            best={type:'newColumn', rowIndex, score};
+          }
+        }
       }
-    }
-
-    if(bestIndex<0){
-      const currentH = placed.length ? Math.max(...placed.map(p=>p.y+p.h)) : 0;
-      free.push({x:0,y:currentH,w:rollWidth,h:Math.max(piece.h, maxH)});
-      bestIndex=free.length-1;
-      bestRect={x:0,y:currentH,w:piece.w,h:piece.h};
-    }
-
-    placed.push(Object.assign({}, piece, bestRect));
-
-    let newFree=[];
-    free.forEach(fr=>{
-      newFree.push(...splitFreeRect(fr,bestRect));
     });
-    free=pruneFreeRects(newFree);
+
+    if(best){
+      const row=rows[best.rowIndex];
+      if(best.type==='column') placeInColumn(row, row.columns[best.colIndex], piece);
+      else placeNewColumn(row, piece);
+    } else {
+      rows.push({columns:[{width:piece.w, usedH:piece.h, items:[piece]}], used:piece.w, height:piece.h});
+    }
   });
 
-  const height = placed.length ? Math.max(...placed.map(p=>p.y+p.h)) : 0;
-  return {placed, height, free: pruneFreeRects(free).filter(r=>r.y < height && r.w>0.5 && r.h>0.5)};
+  return improveRows2D(rows, rollWidth);
 }
 
-function layoutMetrics(layout, rollWidth){
-  const usedArea=layout.placed.reduce((s,p)=>s+p.w*p.h,0);
-  const totalArea=rollWidth*layout.height;
+function rowMetrics(rows, rollWidth){
+  const totalFolds=rows.reduce((s,r)=>s+r.height,0);
+  const usedArea=rows.reduce((s,r)=>s+r.columns.reduce((cs,c)=>cs+c.items.reduce((x,p)=>x+p.w*p.h,0),0),0);
+  const totalArea=rollWidth*totalFolds;
   const wasteArea=Math.max(0,totalArea-usedArea);
+  const sideWasteWidth=rows.reduce((s,r)=>s+rowFreeRight(r,rollWidth),0);
   const usePct=totalArea ? usedArea/totalArea*100 : 0;
-
-  // Качество остатка: крупный свободный прямоугольник ценнее, чем много мелких.
-  const maxFree=layout.free.reduce((m,r)=>Math.max(m,r.w*r.h),0);
-  const fragments=layout.free.length;
-  return {height:layout.height,usedArea,totalArea,wasteArea,usePct,maxFree,fragments};
+  const q=wasteQuality(rows, rollWidth);
+  return {
+    rowsCount:rows.length,
+    totalFolds,
+    wasteWidth:sideWasteWidth,
+    wasteArea,
+    usedArea,
+    totalArea,
+    usePct,
+    maxContinuousArea:q.maxContinuousArea,
+    continuityScore:q.continuityScore,
+    fragments:q.fragments,
+    variance:q.variance,
+    residues:q.residues
+  };
 }
 
-function betterLayout(a,b){
+function wasteQuality(rows, rollWidth){
+  const residues=rows.map(r=>rowFreeRight(r, rollWidth));
+  let continuityScore=0;
+  let maxContinuousArea=0;
+  let fragments=0;
+
+  for(let i=0;i<rows.length;i++){
+    const w=residues[i];
+    if(w>0.5){
+      fragments++;
+      let h=rows[i].height;
+      let j=i+1;
+      while(j<rows.length && Math.abs(residues[j]-w)<=8){
+        h+=rows[j].height;
+        j++;
+      }
+      const area=w*h;
+      maxContinuousArea=Math.max(maxContinuousArea, area);
+      continuityScore+=area;
+    }
+  }
+
+  const avg = residues.length ? residues.reduce((a,b)=>a+b,0)/residues.length : 0;
+  const variance = residues.length ? residues.reduce((s,w)=>s+Math.pow(w-avg,2),0)/residues.length : 0;
+  return {residues, continuityScore, maxContinuousArea, fragments, variance};
+}
+
+function betterMetrics(a,b){
   if(!b) return true;
-  const ma=layoutMetrics(a,ROLL_WIDTH);
-  const mb=layoutMetrics(b,ROLL_WIDTH);
-
-  if(Math.round(ma.height)!==Math.round(mb.height)) return ma.height<mb.height;
-  if(Math.round(ma.wasteArea)!==Math.round(mb.wasteArea)) return ma.wasteArea<mb.wasteArea;
-  if(Math.round(ma.maxFree)!==Math.round(mb.maxFree)) return ma.maxFree>mb.maxFree;
-  if(ma.fragments!==mb.fragments) return ma.fragments<mb.fragments;
-  return ma.usePct>mb.usePct;
+  if(Math.round(a.totalFolds)!==Math.round(b.totalFolds)) return a.totalFolds<b.totalFolds;
+  if(a.rowsCount!==b.rowsCount) return a.rowsCount<b.rowsCount;
+  if(Math.round(a.wasteArea)!==Math.round(b.wasteArea)) return a.wasteArea<b.wasteArea;
+  if(Math.round(a.maxContinuousArea)!==Math.round(b.maxContinuousArea)) return a.maxContinuousArea>b.maxContinuousArea;
+  if(Math.round(a.variance)!==Math.round(b.variance)) return a.variance<b.variance;
+  return a.usePct>b.usePct;
 }
 
-function optimizeLayout(pieces){
-  const modes=['bestArea','bestShortSide','bottomLeft','rightResidue','balanced'];
+function improveRows2D(rows, rollWidth){
+  let changed=true;
+  let guard=0;
+
+  while(changed && guard<80){
+    changed=false;
+    guard++;
+    const current=rowMetrics(rows, rollWidth);
+
+    outer:
+    for(let from=0; from<rows.length; from++){
+      for(let ci=0; ci<rows[from].columns.length; ci++){
+        for(let pi=0; pi<rows[from].columns[ci].items.length; pi++){
+          const piece=rows[from].columns[ci].items[pi];
+
+          for(let to=0; to<rows.length; to++){
+            if(from===to) continue;
+            const test=cloneRows2D(rows);
+            const moved=test[from].columns[ci].items.splice(pi,1)[0];
+            if(!moved) continue;
+            test[from].columns=test[from].columns.filter(c=>c.items.length);
+            test.forEach(normalizeRow);
+            const target=test[to];
+            if(!target || moved.h>target.height) continue;
+
+            let placed=false;
+            for(const col of target.columns){
+              if(canPlaceInColumn(target,col,moved)){
+                placeInColumn(target,col,moved);
+                placed=true;
+                break;
+              }
+            }
+            if(!placed && target.used + moved.w <= rollWidth){
+              placeNewColumn(target,moved);
+              placed=true;
+            }
+            if(!placed) continue;
+
+            test.forEach(normalizeRow);
+            const compact=test.filter(r=>r.columns.length && r.height>0);
+            const metrics=rowMetrics(compact, rollWidth);
+            if(betterMetrics(metrics,current)){
+              rows=compact;
+              changed=true;
+              break outer;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  rows.forEach(r=>{
+    r.columns.forEach(c=>c.items.sort((a,b)=>b.h-a.h || b.w-a.w));
+    r.columns.sort((a,b)=>b.width-a.width || b.usedH-a.usedH);
+    normalizeRow(r);
+  });
+
+  rows.sort((a,b)=>{
+    const wa=rowFreeRight(a,rollWidth);
+    const wb=rowFreeRight(b,rollWidth);
+    if(Math.abs(wb-wa)>8) return wb-wa;
+    return b.height-a.height;
+  });
+
+  return rows;
+}
+
+function packRows(pieces, rollWidth){
+  const modes=['balanced','tightWidth','verticalTight','lowWaste','keepSideResidue'];
   const orders=makeOrders(pieces);
+  let bestRows=[];
   let best=null;
+  let checked=0;
 
   orders.forEach(order=>{
     modes.forEach(mode=>{
-      const l=packMaxRects(clonePieces(order.arr),ROLL_WIDTH,mode);
-      if(betterLayout(l,best)) best=l;
+      const rows=packRowsGreedy2D(clonePieceList(order.arr), rollWidth, mode);
+      const metrics=rowMetrics(rows, rollWidth);
+      checked++;
+      if(betterMetrics(metrics,best)){
+        best=metrics;
+        bestRows=rows;
+      }
     });
   });
 
-  return best || {placed:[],height:0,free:[]};
+  bestRows._checkedVariants=checked;
+  return bestRows;
 }
 
 function calculate(){
+  const rollWidth=300;
   const pieces=getPieces();
-  const oversized=pieces.filter(p=>p.w>ROLL_WIDTH);
+  const oversized=pieces.filter(p=>p.w>rollWidth);
 
   if(oversized.length){
     document.getElementById('layoutNote').textContent='Ошибка: есть детали шире 300 см с учетом припуска. Уменьшите ширину или припуск.';
@@ -455,66 +853,86 @@ function calculate(){
     return;
   }
 
-  const layout=optimizeLayout(pieces);
-  const metrics=layoutMetrics(layout,ROLL_WIDTH);
+  const rows=packRows(pieces,rollWidth);
+  const metrics=rowMetrics(rows, rollWidth);
+  const totalFolds=metrics.totalFolds;
   const area=pieces.reduce((s,p)=>s+(p.realW*p.realH/10000),0);
+  const usePct=Math.round(metrics.usePct);
 
   document.getElementById('sumQty').textContent=pieces.length;
   document.getElementById('sumArea').textContent=area.toFixed(2)+' м²';
-  document.getElementById('sumLength').textContent=formatFolds(metrics.height)+' складок';
-  document.getElementById('sumUse').textContent=Math.round(metrics.usePct)+'%';
+  document.getElementById('sumLength').textContent=formatFolds(totalFolds)+' складок';
+  document.getElementById('sumUse').textContent=usePct+'%';
 
-  renderLayout(layout,metrics);
+  renderLayout(rows,rollWidth,totalFolds);
 }
 
-function renderLayout(layout, metrics){
-  const holder=document.getElementById('layout');
+function renderLayout(rows, rollWidth, totalFolds){
+  const layout=document.getElementById('layout');
+  layout.innerHTML='';
   const note=document.getElementById('layoutNote');
   const fabric=document.getElementById('fabricName').value||'Ткань';
-  holder.innerHTML='';
 
-  if(!layout.placed.length){
-    note.textContent='После расчета здесь появится 2D-схема раскладки.';
+  if(!rows.length){
+    note.textContent='После расчета здесь появится схема раскладки. Ширина рулона фиксированная: 300 см. Высота на карте отображается в складках.';
     return;
   }
 
-  note.textContent=`${fabric}. Ширина рулона: 300 см. Длина раскроя: ${formatFolds(metrics.height)} складок. Использование: ${Math.round(metrics.usePct)}%. Крупный остаток: ${metrics.maxFree.toFixed(0)} усл. ед.`;
+  const metrics=rowMetrics(rows, rollWidth);
+  const checked=rows._checkedVariants || 0;
+  note.textContent=`${fabric}. Ширина рулона: ${rollWidth} см. Общая длина раскроя: ${formatFolds(totalFolds)} складок. Использование: ${Math.round(metrics.usePct)}%. Остаток по ширине: ${metrics.wasteWidth.toFixed(1)} см. Крупный непрерывный остаток: ${metrics.maxContinuousArea ? metrics.maxContinuousArea.toFixed(0) : 0} усл. ед.${checked ? ' Проверено вариантов: '+checked+'.' : ''}`;
 
-  const map=document.createElement('div');
-  map.className='map';
+  rows.forEach(row=>{
+    const rowDiv=document.createElement('div');
+    rowDiv.className='row';
 
-  const scaleY = Math.max(2.1, Math.min(6, MIN_MAP_HEIGHT / Math.max(metrics.height,1)));
-  const mapHeight = Math.max(MIN_MAP_HEIGHT, metrics.height * scaleY);
-  map.style.height = mapHeight + 'px';
+    const label=document.createElement('div');
+    label.className='row-label';
+    label.textContent=`${formatFolds(row.height)} складок`;
 
-  const grid=document.createElement('div');
-  grid.className='map-grid';
-  map.appendChild(grid);
+    const piecesDiv=document.createElement('div');
+    piecesDiv.className='row-pieces';
+    piecesDiv.style.height=Math.max(76, row.height*2.2)+'px';
 
-  layout.free.forEach(r=>{
-    if(r.w < 8 || r.h < 8) return;
-    const wr=document.createElement('div');
-    wr.className='waste-rect';
-    wr.style.left=(r.x*SCALE_X)+'px';
-    wr.style.top=(r.y*scaleY)+'px';
-    wr.style.width=(r.w*SCALE_X)+'px';
-    wr.style.height=(r.h*scaleY)+'px';
-    wr.innerHTML = r.w >= 25 ? `деловой<br>остаток<br>${r.w.toFixed(0)} см` : '';
-    map.appendChild(wr);
+    row.columns.forEach(col=>{
+      const colDiv=document.createElement('div');
+      colDiv.className='stack-col';
+      colDiv.style.flexBasis=(col.width/rollWidth*100)+'%';
+
+      col.items.forEach(p=>{
+        const d=document.createElement('div');
+        d.className='piece';
+        d.style.flexBasis=(p.h/row.height*100)+'%';
+        d.innerHTML=`№${p.line}<br>${p.realW}×${p.realH} см<br><small>(${p.realW}×${formatFolds(p.folds)} складок)</small>`;
+        colDiv.appendChild(d);
+      });
+
+      const verticalWaste=row.height-col.usedH;
+      if(verticalWaste>0.5){
+        const vw=document.createElement('div');
+        vw.className='piece waste vertical-waste';
+        vw.style.flexBasis=(verticalWaste/row.height*100)+'%';
+        vw.innerHTML=`остаток<br>${formatFolds(verticalWaste)} скл.`;
+        colDiv.appendChild(vw);
+      }
+
+      piecesDiv.appendChild(colDiv);
+    });
+
+    const wasteWidth=rowFreeRight(row, rollWidth);
+    if(wasteWidth>0){
+      const w=document.createElement('div');
+      const isGoodResidue = wasteWidth >= 25;
+      w.className='piece waste' + (isGoodResidue ? ' good-residue' : '');
+      w.style.flexBasis=(wasteWidth/rollWidth*100)+'%';
+      w.innerHTML=isGoodResidue ? `деловой<br>остаток<br>${wasteWidth.toFixed(1)} см` : `остаток<br>${wasteWidth.toFixed(1)} см`;
+      piecesDiv.appendChild(w);
+    }
+
+    rowDiv.appendChild(label);
+    rowDiv.appendChild(piecesDiv);
+    layout.appendChild(rowDiv);
   });
-
-  layout.placed.forEach(p=>{
-    const d=document.createElement('div');
-    d.className='piece';
-    d.style.left=(p.x*SCALE_X)+'px';
-    d.style.top=(p.y*scaleY)+'px';
-    d.style.width=(p.w*SCALE_X)+'px';
-    d.style.height=Math.max(32,p.h*scaleY)+'px';
-    d.innerHTML=`№${p.line}<br>${p.realW}×${p.realH} см<br><small>(${p.realW}×${formatFolds(p.folds)} складок)</small>`;
-    map.appendChild(d);
-  });
-
-  holder.appendChild(map);
 }
 
 addRow(80,150,2);
