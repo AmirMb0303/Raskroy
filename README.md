@@ -28,7 +28,7 @@
   .layout-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.note{font-size:13px;color:var(--muted)}
   .roll{width:100%;background:var(--soft);border:2px solid #111827;border-radius:14px;padding:10px;overflow:auto}
   .row{display:flex;align-items:stretch;border-bottom:1px dashed #9ca3af;min-width:760px;position:relative}.row:last-child{border-bottom:0}
-  .piece{border:1px solid #111827;background:#dbeafe;margin:4px 2px;border-radius:8px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;font-weight:700;min-width:42px;min-height:44px;padding:4px;overflow:hidden}
+  .piece{border:1px solid #111827;background:#dbeafe;margin:4px 2px;border-radius:8px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;font-weight:700;min-width:42px;min-height:58px;padding:4px;overflow:hidden}
   .waste{background:#f3f4f6;border:1px dashed #9ca3af;color:#6b7280;font-weight:400}.row-label{width:72px;flex:0 0 72px;font-size:12px;color:#374151;padding:8px 6px;background:#fff;border-right:1px solid #e5e7eb}.row-pieces{display:flex;flex:1}
   @media(max-width:760px){body{padding:10px}.controls,.summary{grid-template-columns:1fr}.header h1{font-size:20px}.card{padding:12px}th,td{font-size:12px;padding:6px}.actions button{flex:1}.layout-head{display:block}.roll{padding:6px}.row{min-width:680px}}
   @media print{body{background:#fff;padding:0}.actions,.no-print{display:none}.card,.header{box-shadow:none;border:1px solid #ddd}.header{color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}.piece,.sum-box,th{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
@@ -38,7 +38,7 @@
 <div class="wrap">
   <div class="header">
     <h1>Карта раскроя ткани плиссе</h1>
-    <p>Раскладка деталей по стандартной ширине рулона 300 см с расчетом общей длины ткани</p>
+    <p>Раскладка деталей по стандартной ширине рулона 300 см с расчетом высоты раскроя в складках</p>
   </div>
 
   <div class="card">
@@ -47,8 +47,9 @@
       <div><label>Ширина рулона</label><input value="300 см — стандарт" readonly></div>
       <div><label>Припуск к каждой детали, см</label><input id="allowance" type="number" value="1" min="0" step="0.5"></div>
     </div>
+    <div class="note" style="margin-top:10px">Формула складок: если высота меньше 60 см — высота / 2; если 60 см и больше — высота / 2,2.</div>
     <div class="actions no-print">
-      <button onclick="addRow()">Добавить строку</button>
+      <button onclick="addRow()">Добавить оку</button>
       <button class="secondary" onclick="calculate()">Рассчитать карту</button>
       <button class="secondary" onclick="window.print()">Печать / PDF</button>
       <button class="danger" onclick="clearRows()">Очистить</button>
@@ -58,7 +59,7 @@
   <div class="card">
     <div class="table-wrap">
       <table>
-        <thead><tr><th>№</th><th>Ширина, см</th><th>Высота, см</th><th>Кол-во</th><th>Комментарий</th><th class="no-print">Удалить</th></tr></thead>
+        <thead><tr><th>№</th><th>Ширина, см</th><th>Высота изделия, см</th><th>Кол-во</th><th class="no-print">Удалить</th></tr></thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
@@ -68,7 +69,7 @@
     <div class="summary">
       <div class="sum-box"><span>Количество изделий</span><strong id="sumQty">0</strong></div>
       <div class="sum-box"><span>Фактическая площадь</span><strong id="sumArea">0 м²</strong></div>
-      <div class="sum-box"><span>Длина ткани</span><strong id="sumLength">0 м</strong></div>
+      <div class="sum-box"><span>Длина раскроя</span><strong id="sumLength">0 складок</strong></div>
       <div class="sum-box"><span>Использование ткани</span><strong id="sumUse">0%</strong></div>
     </div>
   </div>
@@ -77,7 +78,7 @@
     <div class="layout-head">
       <div>
         <h2 style="margin:0;font-size:20px">Карта раскроя</h2>
-        <div class="note" id="layoutNote">После расчета здесь появится схема раскладки.</div>
+        <div class="note" id="layoutNote">После расчета здесь появится схема раскладки. Высота будет показана в складках.</div>
       </div>
     </div>
     <div class="roll" id="layout"></div>
@@ -87,28 +88,40 @@
 <script>
 const tbody = document.getElementById('tbody');
 
-function addRow(w='', h='', q=1, c=''){
+function addRow(w='', h='', q=1){
   const tr = document.createElement('tr');
   tr.innerHTML = `
     <td class="num"></td>
     <td><input type="number" min="1" value="${w}" oninput="calculate()"></td>
     <td><input type="number" min="1" value="${h}" oninput="calculate()"></td>
     <td><input type="number" min="1" value="${q}" oninput="calculate()"></td>
-    <td><input type="text" value="${c}" oninput="calculate()"></td>
     <td class="no-print"><button class="danger" onclick="this.closest('tr').remove();renumber();calculate()">×</button></td>`;
   tbody.appendChild(tr); renumber(); calculate();
 }
 function renumber(){[...tbody.querySelectorAll('tr')].forEach((tr,i)=>tr.querySelector('.num').textContent=i+1)}
 function clearRows(){tbody.innerHTML=''; addRow();}
+function calcFolds(heightCm){
+  if(heightCm < 60){
+    return heightCm / 2;
+  }
+  return heightCm / 2.2;
+}
+function formatFolds(value){
+  const rounded = Math.round(value);
+  return String(rounded);
+}
 function getPieces(){
   const allowance = parseFloat(document.getElementById('allowance').value)||0;
   const pieces=[]; let line=0;
   [...tbody.querySelectorAll('tr')].forEach(tr=>{
     line++;
     const inputs=tr.querySelectorAll('input');
-    const w=parseFloat(inputs[0].value)||0, h=parseFloat(inputs[1].value)||0, q=parseInt(inputs[2].value)||0, c=inputs[3].value.trim();
+    const w=parseFloat(inputs[0].value)||0, h=parseFloat(inputs[1].value)||0, q=parseInt(inputs[2].value)||0;
     if(w>0&&h>0&&q>0){
-      for(let i=0;i<q;i++) pieces.push({w:w+allowance*2,h:h+allowance*2,realW:w,realH:h,comment:c,line});
+      for(let i=0;i<q;i++){
+        const folds = calcFolds(h);
+        pieces.push({w:w+allowance*2,h:folds,realW:w,realH:h,folds,line});
+      }
     }
   });
   pieces.sort((a,b)=>b.h-a.h||b.w-a.w);
@@ -146,35 +159,35 @@ function calculate(){
     document.getElementById('layout').innerHTML='';
     document.getElementById('sumQty').textContent=pieces.length;
     document.getElementById('sumArea').textContent='0 м²';
-    document.getElementById('sumLength').textContent='0 м';
+    document.getElementById('sumLength').textContent='0 складок';
     document.getElementById('sumUse').textContent='0%';
     return;
   }
   const rows=packRows(pieces,rollWidth);
-  const totalLength=rows.reduce((s,r)=>s+r.height,0);
+  const totalFolds=rows.reduce((s,r)=>s+r.height,0);
   const area=pieces.reduce((s,p)=>s+(p.realW*p.realH/10000),0);
-  const usedArea=pieces.reduce((s,p)=>s+(p.w*p.h),0);
-  const totalArea=rollWidth*totalLength;
-  const usePct=totalArea?Math.round(usedArea/totalArea*100):0;
+  const usedFoldArea=pieces.reduce((s,p)=>s+(p.w*p.h),0);
+  const totalFoldArea=rollWidth*totalFolds;
+  const usePct=totalFoldArea?Math.round(usedFoldArea/totalFoldArea*100):0;
   document.getElementById('sumQty').textContent=pieces.length;
   document.getElementById('sumArea').textContent=area.toFixed(2)+' м²';
-  document.getElementById('sumLength').textContent=(totalLength/100).toFixed(2)+' м';
+  document.getElementById('sumLength').textContent=formatFolds(totalFolds)+' складок';
   document.getElementById('sumUse').textContent=usePct+'%';
-  renderLayout(rows,rollWidth,totalLength);
+  renderLayout(rows,rollWidth,totalFolds);
 }
-function renderLayout(rows, rollWidth, totalLength){
+function renderLayout(rows, rollWidth, totalFolds){
   const layout=document.getElementById('layout'); layout.innerHTML='';
   const note=document.getElementById('layoutNote');
   const fabric=document.getElementById('fabricName').value||'Ткань';
-  if(!rows.length){note.textContent='После расчета здесь появится схема раскладки. Ширина рулона фиксированная: 300 см.';return;}
-  note.textContent=`${fabric}. Ширина рулона: ${rollWidth} см. Использовано по длине: ${(totalLength/100).toFixed(2)} м.`;
+  if(!rows.length){note.textContent='После расчета здесь появится схема раскладки. Ширина рулона фиксированная: 300 см. Высота на карте отображается в складках.';return;}
+  note.textContent=`${fabric}. Ширина рулона: ${rollWidth} см. Высота раскроя: ${formatFolds(totalFolds)} складок.`;
   rows.forEach((row,idx)=>{
     const rowDiv=document.createElement('div'); rowDiv.className='row';
-    const label=document.createElement('div'); label.className='row-label'; label.innerHTML=`Ряд ${idx+1}<br>${row.height.toFixed(1)} см`;
+    const label=document.createElement('div'); label.className='row-label'; label.innerHTML=`${idx+1}<br>${formatFolds(row.height)} скл.`;
     const piecesDiv=document.createElement('div'); piecesDiv.className='row-pieces';
     row.items.forEach(p=>{
       const d=document.createElement('div'); d.className='piece'; d.style.flexBasis=(p.w/rollWidth*100)+'%';
-      d.innerHTML=`${p.realW}×${p.realH}<br><small>${p.comment||'стр. '+p.line}</small>`;
+      d.innerHTML=`№${p.line}<br>${p.realW}×${p.realH} см<br><small>(${p.realW}×${formatFolds(p.folds)} складок)</small>`;
       piecesDiv.appendChild(d);
     });
     const wasteWidth=rollWidth-row.used;
