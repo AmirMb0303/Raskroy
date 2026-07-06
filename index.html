@@ -524,27 +524,75 @@ function getPieces(){
       }
     }
   });
-  pieces.sort((a,b)=>b.h-a.h||b.w-a.w);
   return pieces;
 }
 
-function packRows(pieces, rollWidth){
+function clonePieceList(list){
+  return list.map(p=>Object.assign({}, p));
+}
+
+function makeOrders(pieces){
+  const base=clonePieceList(pieces);
+  const orders=[];
+
+  const addOrder=(name, arr)=>{
+    const key=arr.map(p=>`${p.line}:${p.realW}:${p.realH}:${p.w}:${Math.round(p.h*100)}`).join('|');
+    if(!orders.some(o=>o.key===key)){
+      orders.push({name, key, arr});
+    }
+  };
+
+  addOrder('height_desc', clonePieceList(base).sort((a,b)=>b.h-a.h || b.w-a.w));
+  addOrder('width_desc', clonePieceList(base).sort((a,b)=>b.w-a.w || b.h-a.h));
+  addOrder('area_desc', clonePieceList(base).sort((a,b)=>(b.w*b.h)-(a.w*a.h) || b.h-a.h));
+  addOrder('max_side_desc', clonePieceList(base).sort((a,b)=>Math.max(b.w,b.h)-Math.max(a.w,a.h)));
+  addOrder('height_asc', clonePieceList(base).sort((a,b)=>a.h-b.h || b.w-a.w));
+  addOrder('width_asc', clonePieceList(base).sort((a,b)=>a.w-b.w || b.h-a.h));
+
+  // Группировка похожих высот уменьшает потери по длине: в одном ряду лучше держать детали близкой высоты.
+  [2, 5, 10].forEach(step=>{
+    addOrder('height_bucket_'+step, clonePieceList(base).sort((a,b)=>{
+      const ba=Math.round(a.h/step)*step;
+      const bb=Math.round(b.h/step)*step;
+      return bb-ba || b.w-a.w || b.h-a.h;
+    }));
+  });
+
+  return orders;
+}
+
+function packRowsGreedy(pieces, rollWidth, mode){
   const rows=[];
   pieces.forEach(p=>{
     let bestIndex=-1;
     let bestScore=Infinity;
+
     rows.forEach((row,idx)=>{
       if(row.used+p.w<=rollWidth){
         const newHeight=Math.max(row.height,p.h);
         const addedLength=newHeight-row.height;
         const remainingWidth=rollWidth-(row.used+p.w);
-        const score=addedLength*1000+remainingWidth;
+        const heightGap=Math.abs(row.height-p.h);
+        const wasteArea=remainingWidth*newHeight;
+        let score;
+
+        if(mode==='tightWidth'){
+          score=remainingWidth*1000 + addedLength*120 + heightGap;
+        } else if(mode==='lowHeightIncrease'){
+          score=addedLength*5000 + remainingWidth*20 + heightGap*10;
+        } else if(mode==='similarHeight'){
+          score=heightGap*1200 + remainingWidth*20 + addedLength*300;
+        } else {
+          score=addedLength*2500 + remainingWidth*80 + wasteArea*0.05 + heightGap*6;
+        }
+
         if(score<bestScore){
           bestScore=score;
           bestIndex=idx;
         }
       }
     });
+
     if(bestIndex>=0){
       const row=rows[bestIndex];
       row.items.push(p);
@@ -554,7 +602,108 @@ function packRows(pieces, rollWidth){
       rows.push({items:[p],used:p.w,height:p.h});
     }
   });
+
+  return improveRows(rows, rollWidth);
+}
+
+function rowMetrics(rows, rollWidth){
+  const totalFolds=rows.reduce((s,r)=>s+r.height,0);
+  const wasteWidth=rows.reduce((s,r)=>s+(rollWidth-r.used),0);
+  const wasteArea=rows.reduce((s,r)=>s+(rollWidth-r.used)*r.height,0);
+  const usedArea=rows.reduce((s,r)=>s+r.items.reduce((x,p)=>x+p.w*p.h,0),0);
+  const totalArea=rollWidth*totalFolds;
+  const usePct=totalArea ? usedArea/totalArea*100 : 0;
+  return {rowsCount:rows.length,totalFolds,wasteWidth,wasteArea,usedArea,totalArea,usePct};
+}
+
+function betterMetrics(a,b){
+  if(!b) return true;
+  // Главный приоритет: меньше длина рулона в складках.
+  if(Math.round(a.totalFolds)!==Math.round(b.totalFolds)) return a.totalFolds<b.totalFolds;
+  // Затем меньше рядов/резов.
+  if(a.rowsCount!==b.rowsCount) return a.rowsCount<b.rowsCount;
+  // Затем меньше площадь отходов.
+  if(Math.round(a.wasteArea)!==Math.round(b.wasteArea)) return a.wasteArea<b.wasteArea;
+  // Затем выше использование.
+  return a.usePct>b.usePct;
+}
+
+function improveRows(rows, rollWidth){
+  // Небольшая локальная оптимизация: пробуем переносить детали в другие ряды,
+  // если это уменьшает общую длину, количество рядов или площадь отходов.
+  let changed=true;
+  let guard=0;
+
+  while(changed && guard<60){
+    changed=false;
+    guard++;
+    let current=rowMetrics(rows, rollWidth);
+
+    outer:
+    for(let from=0; from<rows.length; from++){
+      for(let pi=0; pi<rows[from].items.length; pi++){
+        const piece=rows[from].items[pi];
+
+        for(let to=0; to<rows.length; to++){
+          if(from===to) continue;
+          if(rows[to].used + piece.w > rollWidth) continue;
+
+          const test=rows.map(r=>({
+            items:r.items.slice(),
+            used:r.used,
+            height:r.height
+          }));
+
+          const moved=test[from].items.splice(pi,1)[0];
+          test[from].used-=moved.w;
+          test[to].items.push(moved);
+          test[to].used+=moved.w;
+
+          test.forEach(r=>{
+            r.height=r.items.length ? Math.max(...r.items.map(x=>x.h)) : 0;
+          });
+
+          const compact=test.filter(r=>r.items.length>0);
+          const metrics=rowMetrics(compact, rollWidth);
+
+          if(betterMetrics(metrics,current)){
+            rows=compact;
+            changed=true;
+            break outer;
+          }
+        }
+      }
+    }
+  }
+
+  rows.forEach(r=>{
+    r.items.sort((a,b)=>b.w-a.w || b.h-a.h);
+    r.used=r.items.reduce((s,p)=>s+p.w,0);
+    r.height=r.items.length ? Math.max(...r.items.map(p=>p.h)) : 0;
+  });
+
+  rows.sort((a,b)=>b.height-a.height || (rollWidth-b.used)-(rollWidth-a.used));
   return rows;
+}
+
+function packRows(pieces, rollWidth){
+  const modes=['balanced','tightWidth','lowHeightIncrease','similarHeight'];
+  const orders=makeOrders(pieces);
+  let bestRows=[];
+  let best=null;
+
+  orders.forEach(order=>{
+    modes.forEach(mode=>{
+      const rows=packRowsGreedy(clonePieceList(order.arr), rollWidth, mode);
+      const metrics=rowMetrics(rows, rollWidth);
+      if(betterMetrics(metrics,best)){
+        best=metrics;
+        bestRows=rows;
+      }
+    });
+  });
+
+  return bestRows;
 }
 
 function calculate(){
@@ -574,11 +723,10 @@ function calculate(){
   }
 
   const rows=packRows(pieces,rollWidth);
-  const totalFolds=rows.reduce((s,r)=>s+r.height,0);
+  const metrics=rowMetrics(rows, rollWidth);
+  const totalFolds=metrics.totalFolds;
   const area=pieces.reduce((s,p)=>s+(p.realW*p.realH/10000),0);
-  const usedFoldArea=pieces.reduce((s,p)=>s+(p.w*p.h),0);
-  const totalFoldArea=rollWidth*totalFolds;
-  const usePct=totalFoldArea?Math.round(usedFoldArea/totalFoldArea*100):0;
+  const usePct=Math.round(metrics.usePct);
 
   document.getElementById('sumQty').textContent=pieces.length;
   document.getElementById('sumArea').textContent=area.toFixed(2)+' м²';
@@ -600,7 +748,8 @@ function renderLayout(rows, rollWidth, totalFolds){
     return;
   }
 
-  note.textContent=`${fabric}. Ширина рулона: ${rollWidth} см. Общая длина раскроя: ${formatFolds(totalFolds)} складок.`;
+  const metrics=rowMetrics(rows, rollWidth);
+  note.textContent=`${fabric}. Ширина рулона: ${rollWidth} см. Общая длина раскроя: ${formatFolds(totalFolds)} складок. Использование: ${Math.round(metrics.usePct)}%. Остаток по ширине: ${metrics.wasteWidth.toFixed(1)} см.`;
 
   rows.forEach(row=>{
     const rowDiv=document.createElement('div');
