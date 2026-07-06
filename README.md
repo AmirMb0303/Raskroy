@@ -1,3 +1,4 @@
+[Uploading karta_raskroya_tkani_plisse_v1.html…]()
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -14,7 +15,7 @@
   .header{background:var(--dark);color:#fff;border-radius:18px;padding:18px 20px;margin-bottom:16px;box-shadow:0 8px 24px rgba(0,0,0,.12)}
   .header h1{margin:0;font-size:24px}.header p{margin:6px 0 0;color:#d1d5db;font-size:14px}
   .card{background:var(--card);border-radius:18px;padding:16px;margin-bottom:16px;box-shadow:0 6px 20px rgba(0,0,0,.08)}
-  .controls{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .controls{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
   label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
   input,select{width:100%;height:40px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font-size:14px;background:#fff}
   button{border:0;border-radius:12px;padding:11px 14px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
@@ -37,15 +38,14 @@
 <div class="wrap">
   <div class="header">
     <h1>Карта раскроя ткани плиссе</h1>
-    <p>Раскладка деталей по ширине рулона с расчетом общей длины ткани</p>
+    <p>Раскладка деталей по стандартной ширине рулона 300 см с расчетом общей длины ткани</p>
   </div>
 
   <div class="card">
     <div class="controls">
       <div><label>Артикул ткани</label><input id="fabricName" value="ROMA 04"></div>
-      <div><label>Ширина рулона, см</label><input id="rollWidth" type="number" value="300" min="1"></div>
+      <div><label>Ширина рулона</label><input value="300 см — стандарт" readonly></div>
       <div><label>Припуск к каждой детали, см</label><input id="allowance" type="number" value="1" min="0" step="0.5"></div>
-      <div><label>Сортировка</label><select id="sortMode"><option value="height">Сначала высокие</option><option value="width">Сначала широкие</option><option value="none">Как в таблице</option></select></div>
     </div>
     <div class="actions no-print">
       <button onclick="addRow()">Добавить строку</button>
@@ -69,7 +69,7 @@
       <div class="sum-box"><span>Количество изделий</span><strong id="sumQty">0</strong></div>
       <div class="sum-box"><span>Фактическая площадь</span><strong id="sumArea">0 м²</strong></div>
       <div class="sum-box"><span>Длина ткани</span><strong id="sumLength">0 м</strong></div>
-      <div class="sum-box"><span>Использование ширины</span><strong id="sumUse">0%</strong></div>
+      <div class="sum-box"><span>Использование ткани</span><strong id="sumUse">0%</strong></div>
     </div>
   </div>
 
@@ -111,25 +111,45 @@ function getPieces(){
       for(let i=0;i<q;i++) pieces.push({w:w+allowance*2,h:h+allowance*2,realW:w,realH:h,comment:c,line});
     }
   });
-  const sortMode=document.getElementById('sortMode').value;
-  if(sortMode==='height') pieces.sort((a,b)=>b.h-a.h||b.w-a.w);
-  if(sortMode==='width') pieces.sort((a,b)=>b.w-a.w||b.h-a.h);
+  pieces.sort((a,b)=>b.h-a.h||b.w-a.w);
   return pieces;
 }
 function packRows(pieces, rollWidth){
   const rows=[];
   pieces.forEach(p=>{
-    let placed=false;
-    for(const row of rows){
-      if(row.used+p.w<=rollWidth){row.items.push(p);row.used+=p.w;row.height=Math.max(row.height,p.h);placed=true;break;}
+    let bestIndex=-1;
+    let bestScore=Infinity;
+    rows.forEach((row,idx)=>{
+      if(row.used+p.w<=rollWidth){
+        const newHeight=Math.max(row.height,p.h);
+        const addedLength=newHeight-row.height;
+        const remainingWidth=rollWidth-(row.used+p.w);
+        const score=addedLength*1000+remainingWidth;
+        if(score<bestScore){bestScore=score;bestIndex=idx;}
+      }
+    });
+    if(bestIndex>=0){
+      const row=rows[bestIndex];
+      row.items.push(p); row.used+=p.w; row.height=Math.max(row.height,p.h);
+    } else {
+      rows.push({items:[p],used:p.w,height:p.h});
     }
-    if(!placed) rows.push({items:[p],used:p.w,height:p.h});
   });
   return rows;
 }
 function calculate(){
-  const rollWidth=parseFloat(document.getElementById('rollWidth').value)||300;
+  const rollWidth=300;
   const pieces=getPieces();
+  const oversized=pieces.filter(p=>p.w>rollWidth);
+  if(oversized.length){
+    document.getElementById('layoutNote').textContent='Ошибка: есть детали шире 300 см с учетом припуска. Уменьшите ширину или припуск.';
+    document.getElementById('layout').innerHTML='';
+    document.getElementById('sumQty').textContent=pieces.length;
+    document.getElementById('sumArea').textContent='0 м²';
+    document.getElementById('sumLength').textContent='0 м';
+    document.getElementById('sumUse').textContent='0%';
+    return;
+  }
   const rows=packRows(pieces,rollWidth);
   const totalLength=rows.reduce((s,r)=>s+r.height,0);
   const area=pieces.reduce((s,p)=>s+(p.realW*p.realH/10000),0);
@@ -146,7 +166,7 @@ function renderLayout(rows, rollWidth, totalLength){
   const layout=document.getElementById('layout'); layout.innerHTML='';
   const note=document.getElementById('layoutNote');
   const fabric=document.getElementById('fabricName').value||'Ткань';
-  if(!rows.length){note.textContent='После расчета здесь появится схема раскладки.';return;}
+  if(!rows.length){note.textContent='После расчета здесь появится схема раскладки. Ширина рулона фиксированная: 300 см.';return;}
   note.textContent=`${fabric}. Ширина рулона: ${rollWidth} см. Использовано по длине: ${(totalLength/100).toFixed(2)} м.`;
   rows.forEach((row,idx)=>{
     const rowDiv=document.createElement('div'); rowDiv.className='row';
