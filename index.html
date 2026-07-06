@@ -107,7 +107,7 @@
     gap:12px;
     margin-bottom:12px;
   }
-  .layout-head h2,.cuts h2,.items-card h2{margin:0 0 8px 0;font-size:20px}
+  .layout-head h2,.items-card h2{margin:0 0 8px 0;font-size:20px}
   .note{font-size:13px;color:var(--muted)}
   .roll{
     width:100%;
@@ -345,7 +345,7 @@
       font-size:14px;
       margin-bottom:8px;
     }
-    .items-card h2,.cuts h2,.layout-head h2{
+    .items-card h2,.layout-head h2{
       font-size:18px;
     }
   }
@@ -378,32 +378,8 @@
     </div>
   </div>
 
-  <div class="card">
-    <div class="layout-head">
-      <div>
-        <h2>Карта раскроя</h2>
-        <div class="note" id="layoutNote">После расчета здесь появится схема раскладки. Высота будет показана в складках.</div>
-      </div>
-    </div>
-    <div class="roll" id="layout"></div>
-  </div>
 
-  <div class="card">
-    <div class="summary">
-      <div class="sum-box"><span>Количество изделий</span><strong id="sumQty">0</strong></div>
-      <div class="sum-box"><span>Фактическая площадь</span><strong id="sumArea">0 м²</strong></div>
-      <div class="sum-box"><span>Длина раскроя</span><strong id="sumLength">0 складок</strong></div>
-      <div class="sum-box"><span>Использование ткани</span><strong id="sumUse">0%</strong></div>
-    </div>
-  </div>
-
-  <div class="card cuts">
-    <h2>Список резов</h2>
-    <div class="note" style="margin-bottom:8px">Порядок выполнения резов по длине рулона.</div>
-    <ol class="cuts-list" id="cutsList"></ol>
-  </div>
-
-  <div class="card items-card">
+<div class="card items-card">
     <h2>Таблица изделий</h2>
     <div class="table-wrap">
       <table>
@@ -421,6 +397,25 @@
       </table>
     </div>
     <div class="mobile-card-list no-print" id="mobileCards"></div>
+  </div>
+
+  <div class="card">
+    <div class="layout-head">
+      <div>
+        <h2>Карта раскроя</h2>
+        <div class="note" id="layoutNote">После расчета здесь появится схема раскладки. Высота будет показана в складках.</div>
+      </div>
+    </div>
+    <div class="roll" id="layout"></div>
+  </div>
+
+  <div class="card">
+    <div class="summary">
+      <div class="sum-box"><span>Количество изделий</span><strong id="sumQty">0</strong></div>
+      <div class="sum-box"><span>Фактическая площадь</span><strong id="sumArea">0 м²</strong></div>
+      <div class="sum-box"><span>Длина раскроя</span><strong id="sumLength">0 складок</strong></div>
+      <div class="sum-box"><span>Использование ткани</span><strong id="sumUse">0%</strong></div>
+    </div>
   </div>
 </div>
 
@@ -714,7 +709,6 @@ function calculate(){
   if(oversized.length){
     document.getElementById('layoutNote').textContent='Ошибка: есть детали шире 300 см с учетом припуска. Уменьшите ширину или припуск.';
     document.getElementById('layout').innerHTML='';
-    document.getElementById('cutsList').innerHTML='';
     document.getElementById('sumQty').textContent=pieces.length;
     document.getElementById('sumArea').textContent='0 м²';
     document.getElementById('sumLength').textContent='0 складок';
@@ -734,7 +728,6 @@ function calculate(){
   document.getElementById('sumUse').textContent=usePct+'%';
 
   renderLayout(rows,rollWidth,totalFolds);
-  renderCuts(rows);
 }
 
 function renderLayout(rows, rollWidth, totalFolds){
@@ -785,24 +778,6 @@ function renderLayout(rows, rollWidth, totalFolds){
   });
 }
 
-function renderCuts(rows){
-  const list=document.getElementById('cutsList');
-  list.innerHTML='';
-
-  if(!rows.length){
-    const li=document.createElement('li');
-    li.textContent='Нет данных для раскроя';
-    list.appendChild(li);
-    return;
-  }
-
-  rows.forEach(row=>{
-    const li=document.createElement('li');
-    const items=row.items.map(p=>`№${p.line} ${p.realW}×${p.realH}`).join(', ');
-    li.textContent=`${formatFolds(row.height)} складок — ${items}`;
-    list.appendChild(li);
-  });
-}
 
 addRow(80,150,2);
 addRow(60,120,1);
