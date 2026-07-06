@@ -461,14 +461,63 @@ function addRow(w='', h='', q=1){
   const tr = document.createElement('tr');
   tr.innerHTML = `
     <td class="num"></td>
-    <td><input type="number" inputmode="decimal" min="1" value="${w}" oninput="calculate()"></td>
-    <td><input type="number" inputmode="decimal" min="1" value="${h}" oninput="calculate()"></td>
+    <td><input class="table-nav-input" data-nav-col="0" type="number" inputmode="decimal" min="1" value="${w}" oninput="calculate()"></td>
+    <td><input class="table-nav-input" data-nav-col="1" type="number" inputmode="decimal" min="1" value="${h}" oninput="calculate()"></td>
     <td class="folds-cell">0</td>
-    <td><input type="number" inputmode="numeric" min="1" value="${q}" oninput="calculate()"></td>
+    <td><input class="table-nav-input" data-nav-col="2" type="number" inputmode="numeric" min="1" value="${q}" oninput="calculate()"></td>
     <td class="no-print"><button class="danger" onclick="this.closest('tr').remove();renumber();calculate()">×</button></td>`;
   tbody.appendChild(tr);
+  attachTableArrowNavigation(tr);
   renumber();
   calculate();
+}
+
+function getTableInputsMatrix(){
+  return [...tbody.querySelectorAll('tr')].map(tr=>[...tr.querySelectorAll('.table-nav-input')]);
+}
+
+function focusTableInput(rowIndex, colIndex){
+  const matrix=getTableInputsMatrix();
+  if(!matrix.length) return;
+
+  const safeRow=Math.max(0, Math.min(rowIndex, matrix.length-1));
+  const row=matrix[safeRow];
+  if(!row || !row.length) return;
+
+  const safeCol=Math.max(0, Math.min(colIndex, row.length-1));
+  const target=row[safeCol];
+  if(target){
+    target.focus();
+    target.select();
+    target.scrollIntoView({block:'nearest', inline:'nearest'});
+  }
+}
+
+function handleTableArrowNavigation(event){
+  const keys=['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'];
+  if(!keys.includes(event.key)) return;
+
+  const input=event.currentTarget;
+  const tr=input.closest('tr');
+  const rows=[...tbody.querySelectorAll('tr')];
+  const rowIndex=rows.indexOf(tr);
+  const rowInputs=[...tr.querySelectorAll('.table-nav-input')];
+  const colIndex=rowInputs.indexOf(input);
+  if(rowIndex<0 || colIndex<0) return;
+
+  event.preventDefault();
+
+  if(event.key==='ArrowRight') focusTableInput(rowIndex, colIndex+1);
+  if(event.key==='ArrowLeft') focusTableInput(rowIndex, colIndex-1);
+  if(event.key==='ArrowDown') focusTableInput(rowIndex+1, colIndex);
+  if(event.key==='ArrowUp') focusTableInput(rowIndex-1, colIndex);
+}
+
+function attachTableArrowNavigation(scope=document){
+  scope.querySelectorAll('.table-nav-input').forEach(input=>{
+    input.removeEventListener('keydown', handleTableArrowNavigation);
+    input.addEventListener('keydown', handleTableArrowNavigation);
+  });
 }
 
 function renumber(){
