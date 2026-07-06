@@ -2,7 +2,10 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#111827" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <title>Карта раскроя ткани плиссе</title>
 <style>
   :root{
@@ -201,6 +204,158 @@
     .summary{grid-template-columns:repeat(4,1fr)}
     .cuts-list{columns:2}
   }
+
+  .mobile-card-list{display:none}
+
+  @media(max-width:760px){
+    html,body{
+      width:100%;
+      overflow-x:hidden;
+      -webkit-text-size-adjust:100%;
+    }
+    body{
+      padding:10px;
+      padding-bottom:92px;
+      background:#f3f4f6;
+    }
+    .wrap{max-width:100%}
+    .header{
+      border-radius:16px;
+      padding:14px;
+      margin-bottom:10px;
+    }
+    .header p{
+      font-size:13px;
+      line-height:1.35;
+    }
+    .card{
+      border-radius:16px;
+      padding:12px;
+      margin-bottom:12px;
+    }
+    input{
+      height:46px;
+      font-size:16px;
+      border-radius:12px;
+    }
+    button{
+      min-height:46px;
+      font-size:15px;
+      border-radius:12px;
+      touch-action:manipulation;
+    }
+    .actions{
+      position:fixed;
+      left:0;
+      right:0;
+      bottom:0;
+      z-index:50;
+      background:rgba(255,255,255,.96);
+      border-top:1px solid #e5e7eb;
+      padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      box-shadow:0 -8px 22px rgba(0,0,0,.12);
+      margin:0;
+    }
+    .actions button{
+      width:100%;
+      padding:10px 8px;
+    }
+    .actions .danger{
+      grid-column:span 2;
+    }
+    .table-wrap{
+      display:none;
+    }
+    .mobile-card-list{
+      display:block;
+    }
+    .mobile-item-card{
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:14px;
+      padding:12px;
+      margin-bottom:10px;
+      box-shadow:0 3px 12px rgba(0,0,0,.04);
+    }
+    .mobile-item-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+      font-weight:700;
+    }
+    .mobile-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+    .mobile-grid .full{grid-column:span 2}
+    .mobile-folds{
+      background:#f9fafb;
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      padding:12px;
+      font-size:16px;
+      font-weight:700;
+      text-align:center;
+    }
+    .roll{
+      border-radius:14px;
+      padding:8px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+    .row{
+      min-width:720px;
+    }
+    .row-label{
+      width:84px;
+      flex-basis:84px;
+      font-size:12px;
+      padding:6px 4px;
+      position:sticky;
+      left:0;
+      z-index:3;
+      box-shadow:2px 0 6px rgba(0,0,0,.08);
+    }
+    .piece{
+      min-height:64px;
+      font-size:12px;
+      border-radius:8px;
+    }
+    .summary{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+    }
+    .sum-box{
+      padding:12px;
+      border-radius:14px;
+    }
+    .sum-box strong{font-size:18px}
+    .cuts-list{
+      columns:1;
+      padding-left:20px;
+    }
+    .cuts-list li{
+      font-size:14px;
+      margin-bottom:8px;
+    }
+    .items-card h2,.cuts h2,.layout-head h2{
+      font-size:18px;
+    }
+  }
+
+  @media print{
+    body{padding-bottom:0!important}
+    .mobile-card-list{display:none!important}
+    .table-wrap{display:block!important}
+  }
+
 </style>
 </head>
 <body>
@@ -265,6 +420,7 @@
         <tbody id="tbody"></tbody>
       </table>
     </div>
+    <div class="mobile-card-list no-print" id="mobileCards"></div>
   </div>
 </div>
 
@@ -275,10 +431,10 @@ function addRow(w='', h='', q=1){
   const tr = document.createElement('tr');
   tr.innerHTML = `
     <td class="num"></td>
-    <td><input type="number" min="1" value="${w}" oninput="calculate()"></td>
-    <td><input type="number" min="1" value="${h}" oninput="calculate()"></td>
+    <td><input type="number" inputmode="decimal" min="1" value="${w}" oninput="calculate()"></td>
+    <td><input type="number" inputmode="decimal" min="1" value="${h}" oninput="calculate()"></td>
     <td class="folds-cell">0</td>
-    <td><input type="number" min="1" value="${q}" oninput="calculate()"></td>
+    <td><input type="number" inputmode="numeric" min="1" value="${q}" oninput="calculate()"></td>
     <td class="no-print"><button class="danger" onclick="this.closest('tr').remove();renumber();calculate()">×</button></td>`;
   tbody.appendChild(tr);
   renumber();
@@ -287,6 +443,36 @@ function addRow(w='', h='', q=1){
 
 function renumber(){
   [...tbody.querySelectorAll('tr')].forEach((tr,i)=>tr.querySelector('.num').textContent=i+1);
+  renderMobileCards();
+}
+
+function renderMobileCards(){
+  const holder=document.getElementById('mobileCards');
+  if(!holder) return;
+  holder.innerHTML='';
+  [...tbody.querySelectorAll('tr')].forEach((tr,i)=>{
+    const inputs=tr.querySelectorAll('input');
+    const foldsText=tr.querySelector('.folds-cell')?.textContent || '0';
+    const card=document.createElement('div');
+    card.className='mobile-item-card';
+    card.innerHTML=`
+      <div class="mobile-item-top">
+        <div>№ ${i+1}</div>
+        <button class="danger" onclick="this.closest('.mobile-item-card')._row.remove();renumber();calculate()">Удалить</button>
+      </div>
+      <div class="mobile-grid">
+        <div><label>Ширина, см</label><input type="number" inputmode="decimal" min="1" value="${inputs[0].value}"></div>
+        <div><label>Высота, см</label><input type="number" inputmode="decimal" min="1" value="${inputs[1].value}"></div>
+        <div><label>Кол-во</label><input type="number" inputmode="numeric" min="1" value="${inputs[2].value}"></div>
+        <div><label>Складок</label><div class="mobile-folds">${foldsText}</div></div>
+      </div>`;
+    card._row=tr;
+    const mobInputs=card.querySelectorAll('input');
+    mobInputs[0].oninput=()=>{inputs[0].value=mobInputs[0].value; calculate();};
+    mobInputs[1].oninput=()=>{inputs[1].value=mobInputs[1].value; calculate();};
+    mobInputs[2].oninput=()=>{inputs[2].value=mobInputs[2].value; calculate();};
+    holder.appendChild(card);
+  });
 }
 
 function clearRows(){
@@ -317,6 +503,7 @@ function getRowsData(){
     if(foldsCell) foldsCell.textContent = folds ? formatFolds(folds) : '0';
     rows.push({line:idx+1,w,h,q,folds});
   });
+  renderMobileCards();
   return rows;
 }
 
