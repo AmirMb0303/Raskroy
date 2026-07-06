@@ -680,13 +680,25 @@ function renderMobileCards(){
     card._row=tr;
     tr._mobileCard=card;
     const mobInputs=card.querySelectorAll('input');
-    const syncAndCalculate=(sourceIndex)=>{
+
+    // iPhone/Safari: если пересчитывать и перерисовывать карту на каждую цифру,
+    // активное поле может потерять фокус и клавиатура закрывается.
+    // Поэтому во время набора только синхронизируем значения и обновляем "Складок".
+    // Полный пересчет запускается после ухода из поля или по кнопке "Рассчитать карту".
+    const syncMobileValue=(sourceIndex)=>{
       inputs[sourceIndex].value=mobInputs[sourceIndex].value;
-      calculate();
+      updateSingleRowFolds(tr);
     };
-    mobInputs[0].oninput=()=>syncAndCalculate(0);
-    mobInputs[1].oninput=()=>syncAndCalculate(1);
-    mobInputs[2].oninput=()=>syncAndCalculate(2);
+
+    mobInputs[0].addEventListener('input',()=>syncMobileValue(0));
+    mobInputs[1].addEventListener('input',()=>syncMobileValue(1));
+    mobInputs[2].addEventListener('input',()=>syncMobileValue(2));
+
+    mobInputs.forEach(inp=>{
+      inp.addEventListener('change',()=>calculate());
+      inp.addEventListener('blur',()=>calculate());
+    });
+
     holder.appendChild(card);
   });
 }
@@ -705,6 +717,24 @@ function calcFolds(heightCm){
 
 function formatFolds(value){
   return String(Math.round(value));
+}
+
+function updateSingleRowFolds(tr){
+  if(!tr) return;
+  const inputs=tr.querySelectorAll('input');
+  const w=parseFloat(inputs[0]?.value)||0;
+  const h=parseFloat(inputs[1]?.value)||0;
+  const folds=w>0&&h>0 ? calcFolds(h) : 0;
+  const foldsText=folds ? formatFolds(folds) : '0';
+
+  const foldsCell=tr.querySelector('.folds-cell');
+  if(foldsCell) foldsCell.textContent=foldsText;
+
+  const mobileCard=tr._mobileCard;
+  if(mobileCard){
+    const mobileFolds=mobileCard.querySelector('.mobile-folds');
+    if(mobileFolds) mobileFolds.textContent=foldsText;
+  }
 }
 
 function getRowsData(){
