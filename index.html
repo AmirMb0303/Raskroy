@@ -505,7 +505,7 @@
 
   <div class="card no-print">
     <div class="controls">
-      <div><label>Артикул ткани</label><input id="fabricName" value="ROMA 04"></div>
+      <div><label>Артикул ткани</label><input id="fabricName" value=""></div>
       <div><label>Ширина рулона</label><input value="300 см — стандарт" readonly></div>
       <div><label>Припуск к каждой детали, см</label><input id="allowance" type="number" value="1" min="0" step="0.5"></div>
     </div>
@@ -1160,9 +1160,7 @@ function renderLayout(rows, rollWidth, totalFolds){
   });
 }
 
-addRow(80,150,2);
-addRow(60,120,1);
-addRow(100,160,2);
+addRow();
 </script>
 </body>
 </html>
