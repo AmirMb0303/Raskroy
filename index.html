@@ -641,7 +641,17 @@ function handleTableArrowNavigation(event){
 
   if(event.key==='ArrowRight') focusTableInput(rowIndex, colIndex+1);
   if(event.key==='ArrowLeft') focusTableInput(rowIndex, colIndex-1);
-  if(event.key==='ArrowDown') focusTableInput(rowIndex+1, colIndex);
+  if(event.key==='ArrowDown'){
+    const isLastRow = rowIndex === rows.length - 1;
+    const rowHasData = rowInputs.some(inp => String(inp.value).trim() !== '');
+
+    if(isLastRow && rowHasData){
+      addRow();
+      focusTableInput(rowIndex+1, colIndex);
+    } else {
+      focusTableInput(rowIndex+1, colIndex);
+    }
+  }
   if(event.key==='ArrowUp') focusTableInput(rowIndex-1, colIndex);
 }
 
